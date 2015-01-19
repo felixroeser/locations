@@ -3,7 +3,7 @@ package me.binarysolo.locations
 import akka.persistence.PersistentActor
 import akka.actor.ActorLogging
 import java.util.Date
-import akka.persistence.SnapshotOffer
+import akka.persistence._
 import akka.actor.Props
 
 case class Address(country: String, city: String, zipcode: String, street: String, lat: Option[Double], long: Option[Double])
@@ -29,7 +29,6 @@ object LocationsActor {
       case LocationUpserted(location) => copy( locations + ( location.id -> location ) )
       case _ => this
     }
-
   }
 }
 
@@ -45,11 +44,6 @@ class LocationsActor() extends PersistentActor with ActorLogging {
 
   val receiveRecover: Receive = {
     case event: LocationEvent => updateState(event)
-    case SnapshotOffer(_, snapshot: LocationsState) => {
-       state = snapshot
-       context.become(receiveCommand)
-    }
-
     case _ => println("receiveRecover!")
   }
 
@@ -61,6 +55,36 @@ class LocationsActor() extends PersistentActor with ActorLogging {
         sender ! event
       }
     }
+  }
+}
+
+
+class LocationsView extends PersistentView {
+  import LocationsActor._
+  import LocationProtocol._
+
+  override def persistenceId = "Locations"
+  override def viewId = "Locations-view"
+
+  var state : LocationsState = new LocationsState
+  def updateState(event: LocationEvent) = state = state.updated(event)
+
+  def receive = {
+    case "snap" =>
+      println(s"view saving snapshot")
+      saveSnapshot(state)
+    case SnapshotOffer(_, snapshot: LocationsState) => {
+      state = snapshot
+    }
+    case SaveSnapshotSuccess(metadata) =>
+      println(s"view saved snapshot (metadata = ${metadata})")
+    case SaveSnapshotFailure(metadata, reason) =>
+      println(s"view snapshot failure (metadata = ${metadata}), caused by ${reason}")
+    case event if isPersistent => {
+      updateState(event.asInstanceOf[LocationEvent])
+      println(s"Got $event")
+    }
+
     case QueryAll => sender ! state.locations
     case QueryId(id) => {
       sender ! state.locations.get(id)
@@ -71,7 +95,3 @@ class LocationsActor() extends PersistentActor with ActorLogging {
     }
   }
 }
-
-// http://doc.akka.io/docs/akka/2.0.1/scala/event-bus.html
-// http://www.latlong.net/
-// http://docs.scala-lang.org/overviews/collections/maps.html
