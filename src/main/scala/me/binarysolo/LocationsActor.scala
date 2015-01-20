@@ -6,7 +6,7 @@ import java.util.Date
 import akka.persistence._
 import akka.actor.Props
 
-case class Address(country: String, state: Option[String], zipcode: String, city: String, street: String, lat: Option[Double], long: Option[Double], distance: Option[Double]) {
+case class Address(country: String, state: Option[String] = None, zipcode: String, city: String, street: String, lat: Option[Double], long: Option[Double], distance: Option[Double] = None) {
   // FIXME use lazy val
   def latLong = (lat, long) match {
     case (Some(lat), Some(long)) => Some(lat, long)
@@ -14,8 +14,8 @@ case class Address(country: String, state: Option[String], zipcode: String, city
   }
 }
 
-case class ImportLocation(id: Option[String], ownerId: String, address: Address)
-case class Location(id: String, ownerId: String, address: Address)
+case class ImportLocation(id: Option[String], ownerId: String, address: Address, databag: Option[Map[String, String]] = None)
+case class Location(id: String, ownerId: String, address: Address, databag: Option[Map[String, String]] = None)
 
 object LocationsActor {
   import LocationProtocol._
@@ -23,6 +23,8 @@ object LocationsActor {
   sealed trait Command
   case class UpsertLocation(location: Location) extends Command
   case class DeleteLocation(id: String) extends Command
+  case class UpsertLocationDatabag(id: String, kv: Map[String, String] ) extends Command
+  case class DeleteLocationDatabagItem(id: String, k: String) extends Command
 
   sealed trait Query
   case object QueryAll extends Query
@@ -36,6 +38,27 @@ object LocationsActor {
     def updated(event: LocationEvent): LocationsState = event match {
       case LocationUpserted(location) => copy( locations + ( location.id -> location ) )
       case LocationDeleted(id) => copy( locations - id )
+      case LocationDatabagUpserted(id, kv) => {
+        // FIXME rather expensive, ugly and not dry with LocationDatabagItemRemoved
+        locations.get(id) match {
+          case Some(location) => {
+            val currentDatabag = location.databag.getOrElse(Map.empty[String, String])
+            val newLocation = location.copy(databag = Some(currentDatabag ++ kv) )
+            copy( locations + ( location.id -> newLocation ) )
+          }
+          case _ => this
+        }
+      }
+      case LocationDatabagItemRemoved(id, k) => {
+        locations.get(id) match {
+          case Some(location) => {
+            val currentDatabag = location.databag.getOrElse(Map.empty[String, String])
+            val newLocation = location.copy(databag = Some(currentDatabag - k) )
+            copy( locations + ( location.id -> newLocation  ))
+          }
+          case _ => this
+        }
+      }
       case _ => this
     }
   }
@@ -67,6 +90,20 @@ class LocationsActor() extends PersistentActor with ActorLogging {
     case DeleteLocation(id) => {
       persist(LocationDeleted(id)) {
         println(s"Deleted $id")
+        event => updateState(event)
+        sender ! event
+      }
+    }
+    case UpsertLocationDatabag(id, databag) => {
+      persist(LocationDatabagUpserted(id, databag)) {
+        println(s"Merge databag $databag to $id")
+        event => updateState(event)
+        sender ! event
+      }
+    }
+    case DeleteLocationDatabagItem(id, k) => {
+      persist(LocationDatabagItemRemoved(id, k)) {
+        println(s"Deleted $k from $id")
         event => updateState(event)
         sender ! event
       }

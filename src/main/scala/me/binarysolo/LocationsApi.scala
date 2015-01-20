@@ -92,14 +92,26 @@ trait LocationsApi extends HttpService { this: LocationsApiActor =>
         path("locations") {
           entity(as[ImportLocation]) { importLocation =>
             // ensure that id is being set or generate a uuid
+            // FIXME find a nicer way to copy a case class into a another
             val location = Location(
               id = importLocation.id.getOrElse( java.util.UUID.randomUUID().toString ),
               ownerId = importLocation.ownerId,
-              address = importLocation.address
+              address = importLocation.address,
+              databag = importLocation.databag
             )
 
             locations ! UpsertLocation(location)
             complete { (Accepted, "will do that") }
+          }
+        } ~
+        path("locations" / Segment / "databag") { (id) =>
+          import spray.json.DefaultJsonProtocol._
+          entity(as[Map[String, String]]) { databag =>
+
+            locations ! UpsertLocationDatabag(id, databag)
+            complete {
+              (Accepted, "will do that")
+            }
           }
         } ~
         path("locations" / "search") {
@@ -123,6 +135,10 @@ trait LocationsApi extends HttpService { this: LocationsApiActor =>
       pathPrefix("v0") {
         path("locations" / Segment) { (id) =>
           locations ! DeleteLocation(id)
+          complete { (Accepted, "will do that") }
+        } ~
+        path("locations" / Segment / "databag" / Segment) { (id, k) =>
+          locations ! DeleteLocationDatabagItem(id, k)
           complete { (Accepted, "will do that") }
         }
       }

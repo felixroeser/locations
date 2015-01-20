@@ -37,13 +37,14 @@ object Boot extends App {
   // these will be loaded from the event journal / snapshots anyways if started again
   // delete target/example for a fresh start
   val seedLocations = List(
-    ("rl1", "r1", Address("de", None, "koeln", "50825", "launplatz 1", Some(50.957566), Some(6.918909), None)),
-    ("rl2", "r1", Address("de", None, "koeln", "50733", "neusser str 254", Some(50.963500), Some(6.953900), None)),
-    ("rl3", "r1", Address("de", None, "koeln", "50668", "eigelstein 80", Some(50.948222), Some(6.956997), None)),
-    ("rl_to_be_deleted", "r1", Address("de", None, "koeln", "50668", "eigelstein 80", Some(50.948222), Some(6.956997), None))
+    ("rl1", "r1", Address("de", None, "koeln", "50825", "launplatz 1", Some(50.957566), Some(6.918909))),
+    ("rl2", "r1", Address("de", None, "koeln", "50733", "neusser str 254", Some(50.963500), Some(6.953900))),
+    ("rl3", "r1", Address("de", None, "koeln", "50668", "eigelstein 80", Some(50.948222), Some(6.956997))),
+    ("rl_to_be_deleted", "r1", Address("de", None, "koeln", "50668", "eigelstein 80", Some(50.948222), Some(6.956997)))
   ).map { l =>
-    Location(l._1, l._2, l._3)
+    Location(l._1, l._2, l._3, None)
   }.foreach { location =>
+    println(s"Posting $location")
     locations ! UpsertLocation(location)
   }
 
