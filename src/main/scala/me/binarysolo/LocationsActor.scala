@@ -85,7 +85,7 @@ class LocationsView extends PersistentView {
       println(s"Got $event")
     }
 
-    case QueryAll => sender ! state.locations
+    case QueryAll => sender ! state.locations.values.toList
     case QueryId(id) => {
       sender ! state.locations.get(id)
     }

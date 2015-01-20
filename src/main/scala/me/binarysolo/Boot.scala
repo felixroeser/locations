@@ -2,11 +2,14 @@ package me.binarysolo.locations
 
 import java.util.Date
 import scala.concurrent.Await
-import scala.concurrent.duration.DurationInt
+import scala.concurrent.duration._
 import akka.actor._
 import akka.pattern.ask
 import akka.util.Timeout
 import akka.persistence.Update
+import akka.io.IO
+
+import spray.can.Http
 
 object Boot extends App {
   import me.binarysolo.locations._
@@ -14,13 +17,25 @@ object Boot extends App {
 
   println("Booting up...")
 
-  val system = ActorSystem("location-es")
+  implicit val system = ActorSystem("location-es")
+  implicit val timeout = Timeout(5 seconds)
+
   val locations = system.actorOf(LocationsActor.props, "locations")
   val locationsView = system.actorOf(Props(classOf[LocationsView]), "locations-view")
   import system.dispatcher
-  implicit val timeout = Timeout(5 seconds)
+
+  // setup and start the api
+  val someContext = new SomeContext {
+    override val l: ActorRef = locations
+    override val lv: ActorRef = locationsView
+  }
+
+  val api = system.actorOf(Props( new LocationsApiActor(someContext)), "locations-api")
+  IO(Http) ? Http.Bind(api, interface = "localhost", port = 9000)
 
   // seed some hardcoded locations
+  // these will be loaded from the event journal / snapshots anyways if started again
+  // delete target/example for a fresh start
   val seedLocations = List(
     ("rl1", "r1", Address("de", "koeln", "50825", "iltisstr 1", Some(50.957566), Some(6.918909))),
     ("rl2", "r1", Address("de", "koeln", "50733", "neusser str 254", Some(50.963500), Some(6.953900))),
@@ -46,6 +61,7 @@ object Boot extends App {
   val queryOwnerIdResults = Await.result(queryOwnerIdFuture, timeout.duration)
   println(s"<------ queryOwnerId ------ $queryOwnerIdResults")
 
-  //Thread.sleep(1000)
+  // a rather lame way to stop the api...
+  Thread.sleep(25000)
   system.shutdown()
 }
