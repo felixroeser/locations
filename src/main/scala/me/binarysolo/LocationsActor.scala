@@ -6,7 +6,15 @@ import java.util.Date
 import akka.persistence._
 import akka.actor.Props
 
-case class Address(country: String, city: String, zipcode: String, street: String, lat: Option[Double], long: Option[Double])
+case class Address(country: String, state: Option[String], zipcode: String, city: String, street: String, lat: Option[Double], long: Option[Double], distance: Option[Double]) {
+  // FIXME use lazy val
+  def latLong = (lat, long) match {
+    case (Some(lat), Some(long)) => Some(lat, long)
+    case _ => None
+  }
+}
+
+case class ImportLocation(id: Option[String], ownerId: String, address: Address)
 case class Location(id: String, ownerId: String, address: Address)
 
 object LocationsActor {
@@ -14,12 +22,12 @@ object LocationsActor {
 
   sealed trait Command
   case class UpsertLocation(location: Location) extends Command
-  case class DeleteLocation(location: Location) extends Command
+  case class DeleteLocation(id: String) extends Command
 
   sealed trait Query
   case object QueryAll extends Query
   case class QueryId(id: String) extends Query
-  case class QueryOwnerId(ownerId: String) extends Query
+  case class QuerySearch(search: Search) extends Query
 
   def props = Props(new LocationsActor)
 
@@ -27,6 +35,7 @@ object LocationsActor {
 
     def updated(event: LocationEvent): LocationsState = event match {
       case LocationUpserted(location) => copy( locations + ( location.id -> location ) )
+      case LocationDeleted(id) => copy( locations - id )
       case _ => this
     }
   }
@@ -51,6 +60,13 @@ class LocationsActor() extends PersistentActor with ActorLogging {
     case UpsertLocation(location) => {
       persist(LocationUpserted(location)) {
         println(s"Upserted $location")
+        event => updateState(event)
+        sender ! event
+      }
+    }
+    case DeleteLocation(id) => {
+      persist(LocationDeleted(id)) {
+        println(s"Deleted $id")
         event => updateState(event)
         sender ! event
       }
@@ -89,9 +105,8 @@ class LocationsView extends PersistentView {
     case QueryId(id) => {
       sender ! state.locations.get(id)
     }
-    case QueryOwnerId(ownerId) => {
-      val hits = state.locations.values.filter { l => l.ownerId == ownerId }
-      sender ! hits
+    case QuerySearch(search) => {
+      sender ! search.run(state.locations.values)
     }
   }
 }

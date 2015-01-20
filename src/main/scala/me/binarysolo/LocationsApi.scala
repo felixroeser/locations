@@ -5,6 +5,7 @@ import scala.concurrent.duration._
 import akka.actor._
 import akka.util.Timeout
 import akka.pattern.ask
+import java.util.UUID
 
 import spray.can.Http
 import spray.routing._
@@ -15,7 +16,9 @@ import DefaultJsonProtocol._
 import MediaTypes._
 import StatusCodes._
 
+import me.binarysolo.locations._
 import LocationsJsonProtocol._
+import SearchJsonProtocol._
 
 trait SomeContext {
   val l: ActorRef
@@ -54,7 +57,7 @@ trait LocationsApi extends HttpService { this: LocationsApiActor =>
           }
         }
       } ~
-      pathPrefix("api") {
+      pathPrefix("v0") {
         pathPrefix("locations") {
           pathSingleSlash {
             respondWithMediaType(`application/json`) {
@@ -80,12 +83,33 @@ trait LocationsApi extends HttpService { this: LocationsApiActor =>
                 }
               }
             }
-          } ~
-          path("owner" / Segment) { (ownerId) =>
+          }
+        }
+      }
+    } ~
+    post {
+      pathPrefix("v0") {
+        path("locations") {
+          entity(as[ImportLocation]) { importLocation =>
+            // ensure that id is being set or generate a uuid
+            val location = Location(
+              id = importLocation.id.getOrElse( java.util.UUID.randomUUID().toString ),
+              ownerId = importLocation.ownerId,
+              address = importLocation.address
+            )
+
+            locations ! UpsertLocation(location)
+            complete { (Accepted, "will do that") }
+          }
+        } ~
+        path("locations" / "search") {
+          entity(as[Search]) { search =>
             respondWithMediaType(`application/json`) {
               complete {
+                println(s"GOT search: $search")
+                // FIXME return a GET location and not the result itself
                 for {
-                  results <- locationsView ? QueryOwnerId(ownerId)
+                  results <- locationsView ? QuerySearch(search)
                 } yield {
                   (OK, results.asInstanceOf[List[Location]].toJson.prettyPrint)
                 }
@@ -95,13 +119,11 @@ trait LocationsApi extends HttpService { this: LocationsApiActor =>
         }
       }
     } ~
-    post {
-      pathPrefix("api") {
-        path("locations") {
-          entity(as[Location]) { location =>
-            locations ! UpsertLocation(location)
-            complete { (Accepted, "will do that") }
-          }
+    delete {
+      pathPrefix("v0") {
+        path("locations" / Segment) { (id) =>
+          locations ! DeleteLocation(id)
+          complete { (Accepted, "will do that") }
         }
       }
     }
