@@ -11,8 +11,8 @@ TBA
     $ cd example
     $ # ruby required from here on
     $ bundle
-    $ # ./post.rb 200+ gkh and saturn locations
-    $ ./post
+    $ # post 200+ gkh and saturn locations
+    $ ./post.rb
     $ # request all locations
     $ curl -H "Content-Type: application/json" http://localhost:9000/v0/locations/
     $ # request all locations by owner
