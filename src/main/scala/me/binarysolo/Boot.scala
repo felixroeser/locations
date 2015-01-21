@@ -33,35 +33,5 @@ object Boot extends App {
   val api = system.actorOf(Props( new LocationsApiActor(someContext)), "locations-api")
   IO(Http) ? Http.Bind(api, interface = "localhost", port = 9000)
 
-  // seed some hardcoded locations
-  // these will be loaded from the event journal / snapshots anyways if started again
-  // delete target/example for a fresh start
-  val seedLocations = List(
-    ("rl1", "r1", Address("de", None, "koeln", "50825", "launplatz 1", Some(50.957566), Some(6.918909))),
-    ("rl2", "r1", Address("de", None, "koeln", "50733", "neusser str 254", Some(50.963500), Some(6.953900))),
-    ("rl3", "r1", Address("de", None, "koeln", "50668", "eigelstein 80", Some(50.948222), Some(6.956997))),
-    ("rl_to_be_deleted", "r1", Address("de", None, "koeln", "50668", "eigelstein 80", Some(50.948222), Some(6.956997)))
-  ).map { l =>
-    Location(l._1, l._2, l._3, None)
-  }.foreach { location =>
-    println(s"Posting $location")
-    locations ! UpsertLocation(location)
-  }
-
-  locations ! DeleteLocation("rl_to_be_deleted")
-
-  locationsView ! Update(await = true)
-
-  // send some queries
-  val future = locationsView ? QueryAll
-  val results = Await.result(future, timeout.duration)
-  println(s"<------ queryAll ------ $results")
-
-  val queryIdFuture = locationsView ? QueryId("rl2")
-  val queryIdResult = Await.result(queryIdFuture, timeout.duration)
-  println(s"<------ queryId ------ $queryIdResult")
-
-  // a rather lame way to stop the api...
-  Thread.sleep(125000)
-  system.shutdown()
+  //system.shutdown()*/
 }

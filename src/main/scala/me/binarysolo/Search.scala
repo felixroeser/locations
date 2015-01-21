@@ -25,7 +25,6 @@ case class Search(ownerId: Option[String], lat: Option[Double], long: Option[Dou
       latLong match {
         case Some(latLong) => {
           val distance = distanceOrNone(Some(latLong), location.address.latLong)
-          println(s"Dist: $distance")
           (distance, location)
         }
         case _ => (None, location)
