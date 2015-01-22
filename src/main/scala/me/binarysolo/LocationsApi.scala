@@ -93,7 +93,7 @@ trait LocationsApi extends HttpService { this: LocationsApiActor =>
         path("locations") {
           entity(as[ImportLocation]) { importLocation =>
             // ensure that id is being set or generate a uuid
-            // FIXME find a nicer way to copy a case class into a another
+            // FIXME find a nicer way to copy from one case class to a another
             val location = Location(
               id = importLocation.id.getOrElse( java.util.UUID.randomUUID().toString ),
               ownerId = importLocation.ownerId,
