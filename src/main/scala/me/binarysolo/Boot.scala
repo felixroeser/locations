@@ -32,6 +32,4 @@ object Boot extends App {
 
   val api = system.actorOf(Props( new LocationsApiActor(someContext)), "locations-api")
   IO(Http) ? Http.Bind(api, interface = "localhost", port = 9000)
-
-  //system.shutdown()*/
 }

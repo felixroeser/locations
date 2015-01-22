@@ -2,6 +2,9 @@ package me.binarysolo.locations
 
 object GeoTools {
 
+  // TODO Selecting points within a bounding circle
+  // see http://www.movable-type.co.uk/scripts/latlong-db.html
+
   def distanceOrNone(pointA: Option[(Double, Double)], pointB: Option[(Double, Double)] ): Option[Double] = {
     (pointA, pointB) match {
       case (Some(pointA), Some(pointB)) => Some( haversineDistance(pointA, pointB) )

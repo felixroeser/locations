@@ -46,6 +46,7 @@ trait LocationsApi extends HttpService { this: LocationsApiActor =>
   implicit val timeout: Timeout = Timeout(30.seconds)
 
   val myRoute = {
+    import spray.json.DefaultJsonProtocol._
     get {
       pathSingleSlash { complete("welcome stanger!") } ~
       pathPrefix(".well-known") {
@@ -101,11 +102,12 @@ trait LocationsApi extends HttpService { this: LocationsApiActor =>
             )
 
             locations ! UpsertLocation(location)
-            complete { (Accepted, "will do that") }
+            respondWithMediaType(`application/json`) {
+              complete { (Accepted, location.toJson.prettyPrint) }
+            }
           }
         } ~
         path("locations" / Segment / "databag") { (id) =>
-          import spray.json.DefaultJsonProtocol._
           entity(as[Map[String, String]]) { databag =>
 
             locations ! UpsertLocationDatabag(id, databag)
