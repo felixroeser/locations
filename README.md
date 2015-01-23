@@ -2,6 +2,17 @@
 
 a demo akka based microservice demo with (buzzword alarm) cqrs and event sourcing
 
+## Event storage
+
+Pick your poison
+
+* Build in:
+  * [LevelDB](https://github.com/google/leveldb) for development
+* External
+  * [In memory](https://github.com/michaelpisula/akka-journal-inmemory) - for tests  
+  * [MongoDB](https://github.com/ironfish/akka-persistence-mongo)
+  * [Cassandra](https://github.com/krasserm/akka-persistence-cassandra/)
+
 ### Getting started
 
 1. flush the event/snapshot journal
