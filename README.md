@@ -7,10 +7,15 @@ a demo akka based microservice demo with (buzzword alarm) cqrs and event sourcin
 Pick your poison
 
 * Build in:
-  * [LevelDB](https://github.com/google/leveldb) for development
+  * [LevelDB](https://github.com/google/leveldb) for development - events will be stored in target/example
 * External
   * [In memory](https://github.com/michaelpisula/akka-journal-inmemory) - for tests  
   * [MongoDB](https://github.com/ironfish/akka-persistence-mongo)
+    * Provide either MONGO_URL or MONGOHQ_URL via the env
+    * Format mongodb://HOST:PORT/DATABASE
+    * Default mongodb://localhost:27017/schauspieler
+    * Events will be stored in the _events_ collection and snapshots in _snapshots_
+    * ```MONGO_URL=mongodb://localhost:27017/schauspieler sbt run```
   * [Cassandra](https://github.com/krasserm/akka-persistence-cassandra/)
 
 ### Getting started
@@ -19,9 +24,10 @@ Pick your poison
 
     $ rm -rf target/example
 
-2. start the application on localhost:9000
+2. start the application on localhost:9000 or provide PORT
 
     $ sbt run
+    $ PORT=9001 sbt run
 
 ### API Example
 
