@@ -43,5 +43,6 @@ object Boot extends App {
   // FIXME wait with api start until locationsView is ready / restored
   val port = sys.env.getOrElse("PORT", "9000").asInstanceOf[String].toInt
   val api = system.actorOf(Props( new LocationsApiActor(someContext)), "locations-api")
-  IO(Http) ? Http.Bind(api, interface = "localhost", port = port)
+  // FIXME read interface from ENV
+  IO(Http) ? Http.Bind(api, interface = "0.0.0.0", port = port)
 }

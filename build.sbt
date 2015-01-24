@@ -23,4 +23,5 @@ libraryDependencies ++= Seq(
   "org.scalatest"            %% "scalatest" % "2.1.6" % "test",
   "commons-io"               % "commons-io" % "2.4" % "test")
 
+Revolver.settings
 enablePlugins(JavaAppPackaging)
