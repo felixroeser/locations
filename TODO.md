@@ -1,4 +1,4 @@
-[ ] Basic api smoke test
+[X] Basic api smoke test
 [ ] Make all endpoint respond to json
 [ ] Sophisticated Tests
 [ ] Use some proper logging
@@ -9,3 +9,4 @@
   * [Getting started](https://devcenter.heroku.com/articles/getting-started-with-scala#set-up)
   * [Deploying Scala Apps on Heroku](https://devcenter.heroku.com/articles/deploying-scala)
   * [Toolbelt](https://toolbelt.heroku.com/)
+  * [sbt native packager](https://github.com/sbt/sbt-native-packager)

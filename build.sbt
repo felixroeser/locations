@@ -1,5 +1,5 @@
-val akkaVersion = "2.3.8"
-val sprayV = "1.3.2"
+import NativePackagerKeys._
+packageArchetype.java_application
 
 fork in console := true
 fork in run := true
@@ -8,6 +8,9 @@ resolvers ++= Seq(
   "krasserm at bintray" at "http://dl.bintray.com/krasserm/maven",
   "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/releases"
 )
+
+val akkaVersion = "2.3.8"
+val sprayV = "1.3.2"
 
 val project = Project(
   id = "locations",

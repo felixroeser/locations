@@ -11,7 +11,7 @@ Pick your poison
 * External
   * [In memory](https://github.com/michaelpisula/akka-journal-inmemory) - for tests  
   * [MongoDB](https://github.com/ironfish/akka-persistence-mongo)
-    * Provide either MONGO_URL or MONGOHQ_URL via the env
+    * Provide either MONGO_URL, MONGOHQ_URL or MONGOLAB_URI via the env
     * Format mongodb://HOST:PORT/DATABASE
     * Default mongodb://localhost:27017/schauspieler
     * Events will be stored in the _events_ collection and snapshots in _snapshots_
@@ -28,6 +28,12 @@ Pick your poison
 
     $ sbt run
     $ PORT=9001 sbt run
+
+3. build it - how Heroku will build it
+
+    $ sbt clean compile
+    $ cd target/universal/stage
+    $ ./bin/locations
 
 ### API Example
 
@@ -98,6 +104,11 @@ Run command and query on separate hosts
     listen haproxyapp_admin:9100 127.0.0.1:9100
     mode http
     stats uri /
+
+#### Heroku
+
+Yes it works! But mind that api access is without any protection at all! Use with
+caution = totally random domain name.
 
 ## Contributions
 
