@@ -1,5 +1,3 @@
-enablePlugins(JavaAppPackaging)
-
 fork in console := true
 fork in run := true
 
@@ -24,3 +22,5 @@ libraryDependencies ++= Seq(
   "io.spray"                 %% "spray-json"    % "1.3.1",
   "org.scalatest"            %% "scalatest" % "2.1.6" % "test",
   "commons-io"               % "commons-io" % "2.4" % "test")
+
+enablePlugins(JavaAppPackaging)
