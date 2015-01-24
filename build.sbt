@@ -1,5 +1,4 @@
-import NativePackagerKeys._
-packageArchetype.java_application
+enablePlugins(JavaAppPackaging)
 
 fork in console := true
 fork in run := true
