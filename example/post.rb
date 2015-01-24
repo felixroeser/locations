@@ -4,8 +4,9 @@ require 'json'
 require 'httparty'
 require 'zlib'
 
-port = ENV['Q_PORT'] || 9000
-host = 'localhost'
+port = (ARGV[0] || 9000).to_i
+host = ARGV[1] || 'localhost'
+puts "Going to use #{host}:#{port}"
 
 %w(gkh saturn).each do |filename|
   # See http://www.pocketnavigation.de/poidownload/pocketnavigation/de/?device-format-id=4&country=DE#selection-step2

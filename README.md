@@ -31,7 +31,6 @@ Pick your poison
 
 ### API Example
 
-
   Do some single api calls
 
     $ #
@@ -64,6 +63,14 @@ Pick your poison
     $ curl -H "Content-Type: application/json" -d '{"ownerId": "saturn"}' http://localhost:9000/v0/locations/search
     $ # do a distance based search with limit
     $ curl -H "Content-Type: application/json" -d '{"ownerId": "gkh", "limit" : 5, "lat": 11.5746, "long": 48.13718, "maxDistance": 200}' http://localhost:9000/v0/locations/search
+
+    You can also run ./smoke_test.rb
+
+### Tests
+
+*Missing* But there is a small smoke test you can run against a running _locations_
+instance: ```cd example && ./smoke_test.rb 9000 localhost``` This will create one new
+location, retrieve it and delete it.
 
 ### Misc
 
