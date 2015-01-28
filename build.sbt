@@ -4,7 +4,8 @@ fork in run := true
 resolvers ++= Seq(
   Classpaths.typesafeResolver,
   "krasserm at bintray" at "http://dl.bintray.com/krasserm/maven",
-  "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/releases"
+  "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/releases",
+  "spray repo" at "http://repo.spray.io"
 )
 
 val akkaVersion = "2.3.8"
@@ -20,8 +21,9 @@ libraryDependencies ++= Seq(
   "io.spray"                 %% "spray-can"     % sprayV,
   "io.spray"                 %% "spray-routing" % sprayV,
   "io.spray"                 %% "spray-json"    % "1.3.1",
+  "io.spray"                 %% "spray-testkit" % "1.3.1" % "test",
   "org.scalatest"            %% "scalatest" % "2.1.6" % "test",
-  "commons-io"               % "commons-io" % "2.4" % "test")
+  "commons-io"               %  "commons-io" % "2.4" % "test")
 
 Revolver.settings
 enablePlugins(JavaAppPackaging)

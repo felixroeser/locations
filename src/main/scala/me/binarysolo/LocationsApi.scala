@@ -5,13 +5,16 @@ import scala.concurrent.duration._
 import akka.actor._
 import akka.util.Timeout
 import akka.pattern.ask
+import akka.event.Logging
+import akka.event.Logging._
+import akka.actor.ActorLogging
 import java.util.UUID
-
 import spray.can.Http
 import spray.routing._
 import spray.http._
 import spray.json._
 import spray.httpx.SprayJsonSupport._
+import spray.routing.directives.{ DirectoryListing, LogEntry }
 import DefaultJsonProtocol._
 import MediaTypes._
 import StatusCodes._
@@ -20,21 +23,16 @@ import me.binarysolo.locations._
 import LocationsJsonProtocol._
 import SearchJsonProtocol._
 
-trait SomeContext {
-  val l: ActorRef
-  val lv: ActorRef
-}
-
 class LocationsApiActor(c: SomeContext) extends Actor with LocationsApi {
   implicit def actorRefFactory = context
-  def receive = runRoute(myRoute)
+  def receive = runRoute(apiRoute)
 
   override val someContext = c
   override val locations = someContext.l
   override val locationsView = someContext.lv
 }
 
-trait LocationsApi extends HttpService { this: LocationsApiActor =>
+trait LocationsApi extends HttpService {
   import LocationsActor._
 
   val someContext: SomeContext
@@ -42,54 +40,98 @@ trait LocationsApi extends HttpService { this: LocationsApiActor =>
   val locationsView: ActorRef
 
   implicit def executionContext = actorRefFactory.dispatcher
-  implicit val system = context.system
   implicit val timeout: Timeout = Timeout(30.seconds)
 
-  val myRoute = {
+  // http://boldradius.com/blog-post/VAXI9i4AADMA4lXn/using-http-header-to-version-a-restful-api-in-spray
+  // http://stackoverflow.com/questions/19131488/spray-routing-how-to-match-specific-accept-headers
+  val LocationsApiType = register(
+    MediaType.custom(
+      mainType = "application",
+      subType = "vnd.locations.v1+json",
+      compressible = true))
+
+  def wellKnownRoutes = {
     import spray.json.DefaultJsonProtocol._
+
     get {
       pathSingleSlash { complete("welcome stanger!") } ~
       pathPrefix(".well-known") {
-        path("ping") { complete { (OK, "PONG") } } ~
+        path("status") {
+          complete { (OK, Map("status" -> "ok")) }
+        } ~
+        path("ping") {
+          complete { (OK, Map("ping" ->"pong")) }
+        } ~
+        // FIXME this one doesn't belong here
         path("snap") {
           complete {
             locationsView ! "snap"
             (Accepted, "will do that")
           }
         }
-      } ~
-      pathPrefix("v0") {
-        pathPrefix("locations") {
-          pathSingleSlash {
-            respondWithMediaType(`application/json`) {
-              complete {
-                for {
-                  results <- locationsView ? QueryAll
-                } yield {
-                  (OK, results.asInstanceOf[List[Location]].toJson.prettyPrint)
-                }
+      }
+    }
+  }
+
+
+  def queryRoutesGet = {
+    import spray.json.DefaultJsonProtocol._
+
+    get {
+      pathPrefix("locations") {
+        respondWithMediaType(LocationsApiType) {
+
+          pathEndOrSingleSlash {
+
+            complete {
+              for {
+                results <- locationsView ? QueryAll
+              } yield {
+                (OK, results.asInstanceOf[List[Location]])
               }
             }
           } ~
           path(Segment) { (id) =>
-            respondWithMediaType(`application/json`) {
-              complete {
-                for {
-                  result <- locationsView ? QueryId(id)
-                } yield {
-                  result match {
-                    case Some(l: Location) => (OK, l.toJson.prettyPrint)
-                    case None => (NotFound, s"$id doesnt exist!")
-                  }
+            complete {
+              for {
+                result <- locationsView ? QueryId(id)
+              } yield {
+                result match {
+                  case Some(l: Location) => (OK, l.toJson.prettyPrint)
+                  case None => (NotFound, s"$id doesnt exist!")
                 }
               }
             }
           }
         }
       }
-    } ~
+    }
+  }
+
+  def queryRoutesPost = {
     post {
-      pathPrefix("v0") {
+      path("locations" / "search") {
+        respondWithMediaType(LocationsApiType) {
+          entity(as[Search]) { search =>
+            complete {
+              println(s"GOT search: $search")
+              // FIXME return a GET location and not the result itself
+              for {
+                results <- locationsView ? QuerySearch(search)
+              } yield {
+                (OK, results.asInstanceOf[List[Location]].toJson.prettyPrint)
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  def commandRoutesPost = {
+    import spray.json.DefaultJsonProtocol._
+    respondWithMediaType(LocationsApiType) {
+      post {
         path("locations") {
           entity(as[ImportLocation]) { importLocation =>
             // ensure that id is being set or generate a uuid
@@ -102,9 +144,7 @@ trait LocationsApi extends HttpService { this: LocationsApiActor =>
             )
 
             locations ! UpsertLocation(location)
-            respondWithMediaType(`application/json`) {
-              complete { (Accepted, location.toJson.prettyPrint) }
-            }
+            complete { (Accepted, location.toJson.prettyPrint) }
           }
         } ~
         path("locations" / Segment / "databag") { (id) =>
@@ -115,26 +155,15 @@ trait LocationsApi extends HttpService { this: LocationsApiActor =>
               (Accepted, "will do that")
             }
           }
-        } ~
-        path("locations" / "search") {
-          entity(as[Search]) { search =>
-            respondWithMediaType(`application/json`) {
-              complete {
-                println(s"GOT search: $search")
-                // FIXME return a GET location and not the result itself
-                for {
-                  results <- locationsView ? QuerySearch(search)
-                } yield {
-                  (OK, results.asInstanceOf[List[Location]].toJson.prettyPrint)
-                }
-              }
-            }
-          }
         }
       }
-    } ~
-    delete {
-      pathPrefix("v0") {
+    }
+  }
+
+
+  def commandRoutesDelete = {
+    respondWithMediaType(LocationsApiType) {
+      delete {
         path("locations" / Segment) { (id) =>
           locations ! DeleteLocation(id)
           complete { (Accepted, "will do that") }
@@ -146,4 +175,6 @@ trait LocationsApi extends HttpService { this: LocationsApiActor =>
       }
     }
   }
+
+  val apiRoute = queryRoutesGet ~ queryRoutesPost ~ wellKnownRoutes  ~ commandRoutesPost ~ commandRoutesDelete
 }

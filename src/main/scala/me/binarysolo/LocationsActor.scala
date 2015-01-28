@@ -2,20 +2,10 @@ package me.binarysolo.locations
 
 import akka.persistence.PersistentActor
 import akka.actor.ActorLogging
-import java.util.Date
 import akka.persistence._
 import akka.actor.Props
-
-case class Address(country: String, state: Option[String] = None, zipcode: String, city: String, street: String, lat: Option[Double], long: Option[Double], distance: Option[Double] = None) {
-  // FIXME use lazy val
-  def latLong = (lat, long) match {
-    case (Some(lat), Some(long)) => Some(lat, long)
-    case _ => None
-  }
-}
-
-case class ImportLocation(id: Option[String], ownerId: String, address: Address, databag: Option[Map[String, String]] = None)
-case class Location(id: String, ownerId: String, address: Address, databag: Option[Map[String, String]] = None)
+import akka.event.Logging
+import java.util.Date
 
 object LocationsActor {
   import LocationProtocol._
@@ -82,7 +72,7 @@ class LocationsActor() extends PersistentActor with ActorLogging {
   val receiveCommand: Receive = {
     case UpsertLocation(location) => {
       persist(LocationUpserted(location)) {
-        println(s"Upserted $location")
+        log.info("Upserted {}", location)
         event => updateState(event)
         sender ! event
       }

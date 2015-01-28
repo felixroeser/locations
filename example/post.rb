@@ -18,9 +18,9 @@ puts "Going to use #{host}:#{port}"
 
     parsed.each do |h|
       h.tap { h[:ownerId] = filename }
-      response = HTTParty.post("http://#{host}:#{port}/v0/locations",
+      response = HTTParty.post("http://#{host}:#{port}/locations",
         { body: h.tap { |h| h[:ownerId] = filename }.to_json,
-          headers: { 'Content-Type' => 'application/json', 'Accept' => 'application/json'}
+          headers: { 'Content-Type' => 'application/json', 'Accept' => 'application/vnd.locations.v1+json'}
       })
       puts [response.code, response.body] unless response.code == 202
     end

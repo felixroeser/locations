@@ -17,25 +17,26 @@ puts "Going to use #{HOST}:#{PORT}".colorize(:yellow)
 
 class LocationsApi
   include HTTParty
-  base_uri "http://#{HOST}:#{PORT}/v0"
+  base_uri "http://#{HOST}:#{PORT}"
+  headers 'Accept' => 'application/vnd.locations.v1+json'
 
   def initialize
   end
 
   def all
-    response = self.class.get("/locations/")
-    response.code == 200 ? response.parsed_response : nil
+    response = self.class.get("/locations")
+    response.code == 200 ? JSON.parse(response.body) : nil
   end
 
   def show(id)
     response = self.class.get("/locations/#{id}")
-    response.code == 200 ? response.parsed_response : nil
+    response.code == 200 ? JSON.parse(response.body) : nil
   end
 
   def create(payload)
     response = self.class.post("/locations",
       { body: payload.to_json,
-        headers: { 'Content-Type' => 'application/json', 'Accept' => 'application/json'}
+        headers: { 'Content-Type' => 'application/json'}
     })
     response.code == 202 ? true : nil
   end
@@ -43,9 +44,9 @@ class LocationsApi
   def search(query)
     response = self.class.post("/locations/search", {
       body: query.to_json,
-      headers: { 'Content-Type' => 'application/json', 'Accept' => 'application/json'}
+      headers: { 'Content-Type' => 'application/json'}
     })
-    response.code == 200 ? response.parsed_response : nil
+    response.code == 200 ? JSON.parse(response.body) : nil
   end
 
   def upsert_to_databag(id, h)
