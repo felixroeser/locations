@@ -11,7 +11,7 @@ import spray.testkit.ScalatestRouteTest
 import com.typesafe.config.ConfigFactory
 
 // http://doc.akka.io/docs/akka/snapshot/scala/testing.html
-class LocationsApiSpec extends FreeSpec with LocationsApi with ScalatestRouteTest with Matchers {
+class ApiSpec extends FreeSpec with Api with ScalatestRouteTest with Matchers {
 
   import LocationsActor._
 

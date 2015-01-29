@@ -1,4 +1,4 @@
-package me.binarysolo.locations
+package me.binarysolo.locations.misc
 
 object GeoTools {
 
@@ -7,7 +7,7 @@ object GeoTools {
 
   def distanceOrNone(pointA: Option[(Double, Double)], pointB: Option[(Double, Double)] ): Option[Double] = {
     (pointA, pointB) match {
-      case (Some(pointA), Some(pointB)) => Some( haversineDistance(pointA, pointB) )
+      case (Some(pointA), Some(pointB)) => Some(haversineDistance(pointA, pointB))
       case _ => None
     }
   }

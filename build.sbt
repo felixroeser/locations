@@ -20,8 +20,8 @@ libraryDependencies ++= Seq(
   "com.github.ironfish"      %% "akka-persistence-mongo-casbah"  % "0.7.5" % "compile",
   "io.spray"                 %% "spray-can"     % sprayV,
   "io.spray"                 %% "spray-routing" % sprayV,
-  "io.spray"                 %% "spray-json"    % "1.3.1",
-  "io.spray"                 %% "spray-testkit" % "1.3.1" % "test",
+  "io.spray"                 %% "spray-json"    % "1.3.1", // there is no 1.3.2 yet
+  "io.spray"                 %% "spray-testkit" % sprayV % "test",
   "org.scalatest"            %% "scalatest" % "2.1.6" % "test",
   "commons-io"               %  "commons-io" % "2.4" % "test")
 

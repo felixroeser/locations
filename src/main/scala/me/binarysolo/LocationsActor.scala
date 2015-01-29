@@ -130,6 +130,6 @@ class LocationsView extends PersistentView {
 
     case QueryAll => sender ! state.locations.values.toList
     case QueryId(id) => sender ! state.locations.get(id)
-    case QuerySearch(search) => sender ! search.run(state.locations.values)
+    case QuerySearch(search) => sender ! Search.run(search, state.locations.values)
   }
 }
