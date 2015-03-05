@@ -13,11 +13,12 @@ require 'rspec/expectations'
 
 PORT = (ARGV[0] || 9000).to_i
 HOST = ARGV[1] || 'localhost'
+APIKEY = ARGV[2] || 'api'
 puts "Going to use #{HOST}:#{PORT}".colorize(:yellow)
 
 class LocationsApi
   include HTTParty
-  base_uri "http://#{HOST}:#{PORT}"
+  base_uri "http://api:#{APIKEY}@#{HOST}:#{PORT}"
   headers 'Accept' => 'application/vnd.locations.v1+json'
 
   def initialize

@@ -6,6 +6,7 @@ require 'zlib'
 
 port = (ARGV[0] || 9000).to_i
 host = ARGV[1] || 'localhost'
+APIKEY = ARGV[2] || 'api'
 puts "Going to use #{host}:#{port}"
 
 %w(gkh saturn).each do |filename|
@@ -18,7 +19,7 @@ puts "Going to use #{host}:#{port}"
 
     parsed.each do |h|
       h.tap { h[:ownerId] = filename }
-      response = HTTParty.post("http://#{host}:#{port}/locations",
+      response = HTTParty.post("http://api:#{APIKEY}@#{host}:#{port}/locations",
         { body: h.tap { |h| h[:ownerId] = filename }.to_json,
           headers: { 'Content-Type' => 'application/json', 'Accept' => 'application/vnd.locations.v1+json'}
       })

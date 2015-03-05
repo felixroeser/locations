@@ -36,6 +36,11 @@ Pick your poison
     $ cd target/universal/stage
     $ ./bin/locations
 
+### Auth
+
+So far all endpoints are secured with http basic auth. Use _api_ as username and
+_api_ as password. Override the password by setting APIKEY
+
 ### API Example
 
   Do some single api calls
@@ -44,18 +49,18 @@ Pick your poison
     $ # grab a fresh shell or open a new tmux/screen window
     $ #
     $ # post a new location
-    $ curl -H "Content-Type: application/vnd.locations.v1+json" -d '{"id": "test1", "ownerId":"some_retailer", "address":{"city":"cologne", "state":"nrw", "zipcode":"50676", "country":"de", "long":6.952221, "street":"Leonhard-Tietz-Strae 1", "lat":50.934009}, "databag":{"status":"whatever"}}' http://localhost:9000/locations
-    $ curl http://localhost:9000/locations/
+    $ curl -H "Content-Type: application/vnd.locations.v1+json" -d '{"id": "test1", "ownerId":"some_retailer", "address":{"city":"cologne", "state":"nrw", "zipcode":"50676", "country":"de", "long":6.952221, "street":"Leonhard-Tietz-Strae 1", "lat":50.934009}, "databag":{"status":"whatever"}}' http://api:api@localhost:9000/locations
+    $ curl http://api:api@localhost:9000/locations/
     $ # add a key-value pair to the databag
-    $ curl -H "Content-Type: application/vnd.locations.v1+json" -d '{"foo": "bar"}' http://localhost:9000/locations/test1/databag
+    $ curl -H "Content-Type: application/vnd.locations.v1+json" -d '{"foo": "bar"}' http://api:api@localhost:9000/locations/test1/databag
     $ # remove a key-value pair from the databag
-    $ curl -X DELETE http://localhost:9000/locations/test1/databag/status
+    $ curl -X DELETE http://api:api@localhost:9000/locations/test1/databag/status
     $ # request the location
-    $ curl http://localhost:9000/locations/test1
+    $ curl http://api:api@localhost:9000/locations/test1
     $ # search for locations around _neumarkt cologne_
-    $ curl -H "Content-Type: application/vnd.locations.v1+json" -d '{"limit" : 5, "lat": 50.936350, "long": 6.949840, "maxDistance": 2}' http://localhost:9000/locations/search
+    $ curl -H "Content-Type: application/vnd.locations.v1+json" -d '{"limit" : 5, "lat": 50.936350, "long": 6.949840, "maxDistance": 2}' http://api:api@localhost:9000/locations/search
     $ # delete the location
-    $ curl -X DELETE http://localhost:9000/locations/test1
+    $ curl -X DELETE http://api:api@localhost:9000/locations/test1
 
   Load a bigger dataset
 
@@ -65,11 +70,11 @@ Pick your poison
     $ # post 200+ gkh and saturn locations
     $ ./post.rb
     $ # request all locations - please mind the slash
-    $ curl -H "Content-Type: application/vnd.locations.v1+json" http://localhost:9000/locations/
+    $ curl -H "Content-Type: application/vnd.locations.v1+json" http://api:api@localhost:9000/locations/
     $ # request all locations by owner
-    $ curl -H "Content-Type: application/vnd.locations.v1+json" -d '{"ownerId": "saturn"}' http://localhost:9000/locations/search
+    $ curl -H "Content-Type: application/vnd.locations.v1+json" -d '{"ownerId": "saturn"}' http://api:api@localhost:9000/locations/search
     $ # do a distance based search with limit
-    $ curl -H "Content-Type: application/vnd.locations.v1+json" -d '{"ownerId": "gkh", "limit" : 5, "lat": 11.5746, "long": 48.13718, "maxDistance": 200}' http://localhost:9000/locations/search
+    $ curl -H "Content-Type: application/vnd.locations.v1+json" -d '{"ownerId": "gkh", "limit" : 5, "lat": 11.5746, "long": 48.13718, "maxDistance": 200}' http://api:api@localhost:9000/locations/search
 
     You can also run ./smoke_test.rb
 
